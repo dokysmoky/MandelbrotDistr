@@ -8,6 +8,13 @@ import primorska.mandlbrotset.renderer.MandelbrotRenderer;
 public class SequentialRenderer implements MandelbrotRenderer {
 
     @Override
+    public void logHardwareUsage() {
+        long usedMemoryMB = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / (1024 * 1024);
+        long maxMemoryMB = Runtime.getRuntime().maxMemory() / (1024 * 1024);
+        System.out.println("SequentialRenderer: Memory used = " + usedMemoryMB + " MB / Max = " + maxMemoryMB + " MB");
+    }
+
+    @Override
     public void render(GraphicsContext gc, int width, int height,
                        double minX, double maxX, double minY, double maxY,
                        double zoomFactor) {

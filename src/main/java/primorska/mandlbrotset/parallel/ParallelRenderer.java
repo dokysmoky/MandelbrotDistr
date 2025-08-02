@@ -12,6 +12,12 @@ import java.util.concurrent.TimeUnit;
 public class ParallelRenderer implements MandelbrotRenderer {
 
     @Override
+    public void logHardwareUsage() {
+        int cores = Runtime.getRuntime().availableProcessors();
+        System.out.println("ParallelRenderer: Using " + cores + " CPU cores");
+    }
+
+    @Override
     public void render(GraphicsContext gc, int width, int height,
                        double minX, double maxX, double minY, double maxY,
                        double zoomFactor) throws InterruptedException {

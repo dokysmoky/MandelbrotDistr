@@ -40,6 +40,7 @@ public class MandelbrotApp extends Application {
     private int imageWidth = 800;
     private int imageHeight = 600;
 
+
     @Override
     public void start(Stage primaryStage) {
         // Determine mode from args
@@ -63,6 +64,8 @@ public class MandelbrotApp extends Application {
                 renderer = new SequentialRenderer();
                 break;
         }
+
+        renderer.logHardwareUsage();
 
         canvas = new Canvas(imageWidth, imageHeight);
         gc = canvas.getGraphicsContext2D();
