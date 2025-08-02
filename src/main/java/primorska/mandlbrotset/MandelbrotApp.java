@@ -19,6 +19,7 @@ import javafx.scene.image.WritableImage;
 import primorska.mandlbrotset.renderer.MandelbrotRenderer;
 import primorska.mandlbrotset.parallel.ParallelRenderer;
 import primorska.mandlbrotset.sequential.SequentialRenderer;
+import primorska.mandlbrotset.distributed.DistributedRendererWrapper;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -51,6 +52,9 @@ public class MandelbrotApp extends Application {
         }
 
         switch (mode) {
+            case "distributed":
+                renderer = new DistributedRendererWrapper();
+                break;
             case "parallel":
                 renderer = new ParallelRenderer();
                 break;
