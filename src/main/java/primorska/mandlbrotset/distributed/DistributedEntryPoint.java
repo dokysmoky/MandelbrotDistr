@@ -58,7 +58,8 @@ public class DistributedEntryPoint {
             var image = DistributedRenderer.renderDistributed(width, height, minX, maxX, minY, maxY, maxIter);
 
             if (rank == 0 && image != null) {
-                System.out.println("Image rendered successfully.");
+
+                // System.out.println("Image rendered successfully.");
             }
         } catch (Exception e) {
             e.printStackTrace();
