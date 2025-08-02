@@ -3,6 +3,7 @@ module primorska.mandelbrotset {
     requires javafx.fxml;
     requires javafx.swing;       // Needed for SwingFXUtils
     requires java.desktop;       // Needed for AWT and ImageIO
+    requires mpj;
 
     opens primorska.mandlbrotset to javafx.fxml;
     exports primorska.mandlbrotset;
