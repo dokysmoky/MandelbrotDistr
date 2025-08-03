@@ -187,7 +187,7 @@ public class MainApp {
         } else {
             // Other ranks enter a waiting loop to handle distributed rendering
             DistributedRendererWrapper worker = new DistributedRendererWrapper();
-            //worker.runWorkerLoop();
+            worker.runWorkerLoop();
         }
 
         MPI.Finalize();

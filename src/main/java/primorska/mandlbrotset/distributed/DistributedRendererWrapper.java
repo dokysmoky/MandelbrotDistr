@@ -512,4 +512,61 @@ public class DistributedRendererWrapper implements MandelbrotRenderer {
             return null;
         }
     }
+    public void runWorkerLoop() {
+        final int TAG_TASK = 1;
+        final int TAG_RESULT = 2;
+        final int TAG_STOP = 3;
+
+        System.out.printf("Rank %d: entering worker loop%n", rank);
+
+        while (true) {
+            // Receive a message from rank 0 - either task info or stop signal
+            Status status = MPI.COMM_WORLD.Probe(0, MPI.ANY_TAG);
+            int tag = status.tag;
+
+            if (tag == TAG_STOP) {
+                // Stop signal received, break loop
+                MPI.COMM_WORLD.Recv(new byte[0], 0, 0, MPI.BYTE, 0, TAG_STOP);
+                System.out.printf("Rank %d: received stop signal, exiting worker loop%n", rank);
+                break;
+            }
+
+            if (tag == TAG_TASK) {
+                // Receive task parameters: startRow, numRows, width, height, minX, maxX, minY, maxY, maxIter
+                int[] params = new int[5]; // startRow, numRows, width, height, maxIter
+                double[] dparams = new double[4]; // minX, maxX, minY, maxY
+
+                MPI.COMM_WORLD.Recv(params, 0, params.length, MPI.INT, 0, TAG_TASK);
+                MPI.COMM_WORLD.Recv(dparams, 0, dparams.length, MPI.DOUBLE, 0, TAG_TASK);
+
+                int startRow = params[0];
+                int numRows = params[1];
+                int width = params[2];
+                int height = params[3];
+                int maxIter = params[4];
+                double minX = dparams[0];
+                double maxX = dparams[1];
+                double minY = dparams[2];
+                double maxY = dparams[3];
+
+                // Compute pixel colors for assigned rows
+                int[] pixels = new int[numRows * width];
+                for (int py = 0; py < numRows; py++) {
+                    int globalRow = startRow + py;
+                    for (int px = 0; px < width; px++) {
+                        double x0 = minX + px * (maxX - minX) / (width - 1);
+                        double y0 = minY + globalRow * (maxY - minY) / (height - 1);
+
+                        int iter = mandelbrotIterations(x0, y0, maxIter);
+                        pixels[py * width + px] = getColor(iter, maxIter);
+                    }
+                }
+
+                // Send computed pixels back to master
+                MPI.COMM_WORLD.Send(pixels, 0, pixels.length, MPI.INT, 0, TAG_RESULT);
+                System.out.printf("Rank %d: sent rendered chunk rows %d-%d%n", rank, startRow, startRow + numRows - 1);
+            }
+        }
+    }
+
 }
