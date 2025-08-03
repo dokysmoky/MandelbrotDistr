@@ -174,4 +174,20 @@ public class DistributedRendererWrapper implements MandelbrotRenderer {
             e.printStackTrace();
         }
     }
+
+    public BufferedImage renderToImage(int width, int height,
+                                       double minX, double maxX,
+                                       double minY, double maxY,
+                                       int maxIter) {
+        try {
+            // Call the static method that might throw Exception
+            return DistributedRenderer.renderDistributed(width, height, minX, maxX, minY, maxY, maxIter);
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Return null or some fallback value if error occurs
+            return null;
+        }
+    }
+
+
 }
