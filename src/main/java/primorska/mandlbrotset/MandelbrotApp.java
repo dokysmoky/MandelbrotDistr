@@ -639,7 +639,7 @@ private void zoom(double factor) {
         }
         canvas.requestFocus();
     }
-
+/*
     private void saveImage(File file) {
         try {
             String ext = getExtension(file.getName());
@@ -648,6 +648,36 @@ private void zoom(double factor) {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+*/
+private void saveImage(File file) {
+    try {
+        String ext = getExtension(file.getName());
+        if (ext == null) ext = "png";
+
+        BufferedImage imgToSave = lastRenderedImage;
+
+        // JPEG does not support alpha channel; convert if needed
+        if (ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("jpeg")) {
+            imgToSave = removeAlphaChannel(lastRenderedImage);
+        }
+
+        boolean result = ImageIO.write(imgToSave, ext, file);
+        if (!result) {
+            System.out.println("Saving failed: unknown format or ImageIO plugin missing.");
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+    private BufferedImage removeAlphaChannel(BufferedImage image) {
+        BufferedImage rgbImage = new BufferedImage(
+                image.getWidth(), image.getHeight(),
+                BufferedImage.TYPE_INT_RGB);
+        java.awt.Graphics2D g = rgbImage.createGraphics();
+        g.drawImage(image, 0, 0, java.awt.Color.WHITE, null); // Fill transparent areas with white
+        g.dispose();
+        return rgbImage;
     }
 
     private String getExtension(String filename) {
