@@ -71,6 +71,7 @@ public class ParallelRenderer implements MandelbrotRenderer {
         System.out.printf("Parallel Mandelbrot drawn in %.2f ms%n", (endTime - startTime) / 1_000_000.0);
     }
 }*/
+/*
 package primorska.mandlbrotset.parallel;
 
 import javafx.scene.canvas.GraphicsContext;
@@ -202,6 +203,91 @@ public class ParallelRenderer implements MandelbrotRenderer {
         executor.awaitTermination(1, TimeUnit.MINUTES);
 
         return image;
+    }
+}*/
+
+package primorska.mandlbrotset.parallel;
+
+import primorska.mandlbrotset.renderer.MandelbrotRenderer;
+
+import java.awt.image.BufferedImage;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+public class ParallelRenderer implements MandelbrotRenderer {
+
+    @Override
+    public void logHardwareUsage() {
+        int cores = Runtime.getRuntime().availableProcessors();
+        long usedMemoryMB = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / (1024 * 1024);
+        long maxMemoryMB = Runtime.getRuntime().maxMemory() / (1024 * 1024);
+
+        System.out.println("ParallelRenderer using " + cores + " threads.");
+        System.out.println("Memory used: " + usedMemoryMB + " MB / Max: " + maxMemoryMB + " MB");
+    }
+
+    @Override
+    public void render(javafx.scene.canvas.GraphicsContext gc, int width, int height,
+                       double minX, double maxX, double minY, double maxY,
+                       double zoomFactor) throws InterruptedException {
+        BufferedImage img = renderToImage(width, height, minX, maxX, minY, maxY, 500);
+        javafx.application.Platform.runLater(() -> {
+            javafx.scene.image.WritableImage fxImage = javafx.embed.swing.SwingFXUtils.toFXImage(img, null);
+            gc.clearRect(0, 0, width, height);
+            gc.drawImage(fxImage, 0, 0);
+        });
+    }
+
+    public BufferedImage renderToImage(int width, int height,
+                                       double minX, double maxX,
+                                       double minY, double maxY,
+                                       int maxIter) {
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+        ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
+        for (int y = 0; y < height; y++) {
+            final int row = y;
+            executor.submit(() -> {
+                for (int x = 0; x < width; x++) {
+                    double zx = minX + x * (maxX - minX) / width;
+                    double zy = minY + row * (maxY - minY) / height;
+
+                    int iter = mandelbrot(zx, zy, maxIter);
+                    int color = getColor(iter, maxIter);
+                    image.setRGB(x, row, color);
+                }
+            });
+        }
+
+        executor.shutdown();
+        try {
+            executor.awaitTermination(60, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        return image;
+    }
+
+    private int mandelbrot(double zx, double zy, int maxIter) {
+        double x = 0, y = 0;
+        int iter = 0;
+        while (x * x + y * y <= 4 && iter < maxIter) {
+            double xtemp = x * x - y * y + zx;
+            y = 2 * x * y + zy;
+            x = xtemp;
+            iter++;
+        }
+        return iter;
+    }
+
+    private int getColor(int iter, int maxIter) {
+        if (iter == maxIter) return 0xFF000000;  // black
+        float hue = iter / (float) maxIter;
+        int rgb = java.awt.Color.HSBtoRGB(hue, 0.7f, 1.0f);
+        return 0xFF000000 | (rgb & 0xFFFFFF);
     }
 }
 

@@ -54,6 +54,7 @@ public class SequentialRenderer implements MandelbrotRenderer {
         System.out.printf("Sequential Mandelbrot drawn in %.2f ms%n", (endTime - startTime) / 1_000_000.0);
     }
 }*/
+/*
 package primorska.mandlbrotset.sequential;
 
 import javafx.scene.canvas.GraphicsContext;
@@ -145,6 +146,118 @@ public class SequentialRenderer implements MandelbrotRenderer {
                 }
 
                 image.setRGB(px, py, rgb);
+            }
+        }
+
+        return image;
+    }
+}
+*/
+/*
+package primorska.mandlbrotset.sequential;
+
+import java.awt.image.BufferedImage;
+import java.awt.Color;
+
+public class SequentialRenderer implements MandelbrotRenderer {
+
+    @Override
+    public void logHardwareUsage() {
+        int cores = Runtime.getRuntime().availableProcessors();
+        System.out.println("Sequential Renderer: using " + cores + " core(s)");
+        System.out.flush();
+    }
+
+    public void renderToImage(BufferedImage img, int width, int height,
+                              double minX, double maxX, double minY, double maxY,
+                              int maxIter) {
+        logHardwareUsage();
+
+        for (int y = 0; y < height; y++) {
+            double cy = minY + (maxY - minY) * y / height;
+            for (int x = 0; x < width; x++) {
+                double cx = minX + (maxX - minX) * x / width;
+
+                int iter = mandelbrot(cx, cy, maxIter);
+                int color = Color.HSBtoRGB(iter / 256f, 1, iter > 0 ? 1 : 0);
+                img.setRGB(x, y, color);
+            }
+        }
+    }
+
+    private int mandelbrot(double cx, double cy, int maxIter) {
+        double zx = 0.0;
+        double zy = 0.0;
+        int iter = 0;
+        while (zx * zx + zy * zy < 4.0 && iter < maxIter) {
+            double temp = zx * zx - zy * zy + cx;
+            zy = 2.0 * zx * zy + cy;
+            zx = temp;
+            iter++;
+        }
+        return iter;
+    }
+}
+*/
+package primorska.mandlbrotset.sequential;
+
+import javafx.scene.canvas.GraphicsContext;
+import primorska.mandlbrotset.renderer.MandelbrotRenderer;
+
+import java.awt.image.BufferedImage;
+
+public class SequentialRenderer implements MandelbrotRenderer {
+
+    @Override
+    public void render(GraphicsContext gc, int width, int height,
+                       double minX, double maxX,
+                       double minY, double maxY,
+                       double zoomFactor) {
+        // Your render implementation here
+    }
+
+    /*@Override
+    public BufferedImage renderToImage(int width, int height,
+                                       double minX, double maxX,
+                                       double minY, double maxY,
+                                       int maxIter) {
+        // Your image rendering logic here
+        return new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+    }*/
+    @Override
+    public BufferedImage renderToImage(int width, int height,
+                                       double minX, double maxX,
+                                       double minY, double maxY,
+                                       int maxIter) {
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+        for (int px = 0; px < width; px++) {
+            for (int py = 0; py < height; py++) {
+                // Map pixel to complex plane coordinates
+                double x0 = minX + px * (maxX - minX) / (width - 1);
+                double y0 = minY + py * (maxY - minY) / (height - 1);
+
+                double x = 0;
+                double y = 0;
+                int iteration = 0;
+
+                while (x * x + y * y <= 4 && iteration < maxIter) {
+                    double xtemp = x * x - y * y + x0;
+                    y = 2 * x * y + y0;
+                    x = xtemp;
+                    iteration++;
+                }
+
+                // Color based on iteration count (simple grayscale)
+                int color;
+                if (iteration == maxIter) {
+                    color = 0xFF000000; // black
+                } else {
+                    int c = 255 - (iteration * 255 / maxIter);
+                    color = (0xFF << 24) | (c << 16) | (c << 8) | c; // grayscale
+                }
+
+                image.setRGB(px, py, color);
             }
         }
 
